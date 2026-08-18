@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Vanuatu Fresh Market Standards | Taste of Vanuatu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f2eb;
+            color: #1a2a1f;
+            line-height: 1.5;
+        }
+
+        .top-nav {
+            background: #1a5a3a;
+            padding: 12px 24px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-nav a {
+            color: white;
+            text-decoration: none;
+            background: #ffc107;
+            color: #1a5a3a;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .top-nav a:hover {
+            background: white;
+        }
+
+        .floating-buttons {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+        .floating-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            font-size: 28px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .floating-btn:hover {
+            transform: scale(1.08);
+        }
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+        }
+        .pdf-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .catalogue {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+        }
+
+        .page {
+            padding: 60px 48px;
+            border-bottom: 1px solid #e0d6c8;
+            page-break-after: always;
+            break-inside: avoid;
+        }
+
+        @media print {
+            .page {
+                page-break-after: always;
+                break-inside: avoid;
+                padding: 1.5cm;
+            }
+            body {
+                background: white;
+            }
+            .top-nav, .floating-buttons, .order-btn, #orderModal {
+                display: none !important;
+            }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            letter-spacing: -0.02em;
+            color: #1e3a1e;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2b4f2b;
+            border-left: 6px solid #7f8c2e;
+            padding-left: 20px;
+        }
+
+        .brand {
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #7f8c2e;
+            margin-bottom: 1rem;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: #4a6741;
+            margin: 1rem 0 2rem;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background: #fefaf5;
+        }
+
+        .spec-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2d8cd;
+            vertical-align: top;
+        }
+
+        .spec-table td:first-child {
+            font-weight: 600;
+            width: 35%;
+            background: #f7f2ea;
+        }
+
+        .bodies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 32px 0;
+        }
+
+        .body-card {
+            background: #fefaf5;
+            border-left: 4px solid #7f8c2e;
+            padding: 16px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .body-logo {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+        .body-info {
+            flex: 1;
+        }
+        .body-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #2b4f2b;
+        }
+        .body-role {
+            font-size: 0.75rem;
+            color: #6b6b6b;
+        }
+
+        .signature-area {
+            margin: 48px 0 32px;
+            padding-top: 32px;
+            border-top: 2px dashed #c0b29e;
+        }
+
+        .sign-line {
+            width: 300px;
+            border-bottom: 1.5px solid #1e3a1e;
+            margin: 24px 0 12px;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #7b6e5c;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid #e2d8cd;
+        }
+
+        .product-image {
+            width: 100%;
+            max-height: 350px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin: 20px 0;
+            background: #e6dacf;
+        }
+
+        .cover-image {
+            width: 100%;
+            border-radius: 20px;
+            margin: 32px 0;
+            background: #d9cfc0;
+            min-height: 200px;
+            object-fit: cover;
+        }
+
+        .ceo-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 20px;
+            border: 4px solid #7f8c2e;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .logo-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            margin: 40px 0;
+            align-items: center;
+        }
+        .logo-row img {
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-btn {
+            background: #1e3a1e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .nav-btn:hover {
+            background: #2b5a2b;
+        }
+
+        .live-badge {
+            background: #dc3545;
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        .live-stock {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .order-btn {
+            background: #1e3a1e;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .order-btn:hover {
+            background: #2b5a2b;
+            transform: scale(1.02);
+        }
+
+        /* --- ORDER MODAL --- */
+        #orderModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        #orderModal.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .modal-box h2 { border-left: none; padding: 0; margin-bottom: 20px; }
+        .modal-box input {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;
+        }
+        .modal-box button {
+            width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold;
+        }
+        .btn-order-submit { background: #1e3a1e; color: white; }
+        .btn-order-close { background: #dc3545; color: white; margin-top: 10px; }
+        .modal-msg { display: none; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        .modal-msg.success { background: #d4edda; color: #155724; display: block; }
+        .modal-msg.error { background: #f8d7da; color: #721c24; display: block; }
+
+        @media (max-width: 700px) {
+            .page { padding: 32px 20px; }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            .two-column { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+     <!--   <a href="https://Man-Blaze.github.io/vbs-report/">← Back to VBS Digital Shield</a> -->
+    </div>
+    
+    <div class="floating-buttons">
+        <a href="https://wa.me/6787972045?text=Hello%21%20I%27m%20interested%20in%20your%20Vanuatu%20fresh%20produce%20catalogue." 
+           class="floating-btn whatsapp-btn" target="_blank" title="WhatsApp Order">
+            💬
+        </a>
+        <button class="floating-btn pdf-btn" onclick="window.print();" title="Save as PDF">
+            📄
+        </button>
+    </div>
+
+    <div class="nav-buttons">
+        <a href="#cover" class="nav-btn">Cover</a>
+        <a href="#ceo" class="nav-btn">CEO Message</a>
+        <a href="#bodies" class="nav-btn">Bodies</a>
+        <a href="#taro" class="nav-btn">Taro</a>
+        <a href="#yam" class="nav-btn">Yam</a>
+        <a href="#kumala" class="nav-btn">Kumala</a>
+        <a href="#ginger" class="nav-btn">Ginger</a>
+        <a href="#coconut" class="nav-btn">Coconut</a>
+        <a href="#contact" class="nav-btn">Contact</a>
+    </div>
+
+<div class="catalogue">
+
+    <!-- PAGE 1: COVER -->
+    <section class="page" id="cover">
+        <div class="logo-row">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/vanu.png" alt="Vanu Trademark" style="height: 80px;">
+        </div>
+        <h1>FRESH MARKET STANDARDS<br>CATALOGUE</h1>
+        <div class="tagline">From Vanuatu Organic Farms to National and International Markets . Grown in Volcanic Soil , Pure Organic , Only The Best– Global Edition</div>
+        <div style="margin: 32px 0 24px;">
+            <span style="background: #1e3a1e; color: white; padding: 6px 18px; border-radius: 40px; font-size: 0.9rem;">Taro</span>
+            <span style="background: #1e3a1e; color: white; padding: 6px 18px; border-radius: 40px; font-size: 0.9rem; margin-left: 12px;">Yam</span>
+            <span style="background: #1e3a1e; color: white; padding: 6px 18px; border-radius: 40px; font-size: 0.9rem; margin-left: 12px;">Kumala</span>
+            <span style="background: #1e3a1e; color: white; padding: 6px 18px; border-radius: 40px; font-size: 0.9rem; margin-left: 12px;">Ginger</span>
+            <span style="background: #1e3a1e; color: white; padding: 6px 18px; border-radius: 40px; font-size: 0.9rem; margin-left: 12px;">Dried Coconut</span>
+        </div>
+        <p style="font-size: 1.2rem; max-width: 80%; margin: 32px 0;"><strong>Vanuatu's Highest Standard Of Organic Produce.<br>Your Healthy Choice.</strong></p>
+        <img class="cover-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/front%20page.jpg" alt="Vanuatu organic farm">
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+    <!-- PAGE 2: CEO MESSAGE -->
+    <section class="page" id="ceo">
+        <div class="two-column">
+            <div>
+                <h2>A Message from the CEO</h2>
+                <p style="font-size: 1.05rem; line-height: 1.6; margin: 20px 0;">The successful arrival, biosecurity clearance, and retail launch of Vanuatu's first taro shipment into Australia marks the operational beginning of a new national export pathway built under the Santo National Standard Packhouse System.</p>
+                <p style="font-size: 1.05rem; line-height: 1.6; margin: 20px 0;">From farm traceability, standards, biosecurity, customs, and cold-chain logistics to final market presentation in Melbourne, this achievement demonstrates that Vanuatu can now deliver high-quality products through a fully coordinated international export system – opening a new era of sustainable trade, farmer income, and economic transformation for the nation.</p>
+            </div>
+            <div style="text-align: center;">
+                <img class="ceo-photo" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/ceo.jpg" alt="CEO VBS">
+                <div class="sign-line" style="margin: 24px auto 12px; width: 200px;"></div>
+                <p><strong>CEO VBS</strong><br>Vanuatu Bureau of Standards</p>
+                <p style="color: #6b7c4e; font-size: 0.85rem;">📅 2026 · Santo, Vanuatu</p>
+            </div>
+        </div>
+        <div class="logo-row">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/vbs.png" alt="VBS">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/WBT.png" alt="WBT">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/QS.png" alt="Quality Solutions">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/custom.png" alt="Custom">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/biologo.png" alt="Biosecurity">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/doi.png" alt="DOI">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/Tourism.png" alt="Tourism">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/DARD.png" alt="DARD">
+            <img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/VanIPO--Logo-Print.png" alt="VanIPO">
+        </div>
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+    <!-- PAGE 3: BODIES -->
+    <section class="page" id="bodies">
+        <h2>The Bodies Involved</h2>
+        <p style="margin-bottom: 24px;">From Vanuatu Organic farm to National and International shelf — a fully coordinated national system.</p>
+        <div class="bodies-grid">
+             <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/vbs.png" class="body-logo"><div class="body-info"><div class="body-title">VBS (Vanuatu Bureau of Standards)</div><div class="body-role">Leading agency under Trade Ministry – lab testing, packhouse standards</div></div></div>
+            <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/custom.png" class="body-logo"><div class="body-info"><div class="body-title">Custom</div><div class="body-role">Import/export clearance</div></div></div>
+            <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/biologo.png" class="body-logo"><div class="body-info"><div class="body-title">Biosecurity Vanuatu</div><div class="body-role">Phytosanitary certification</div></div></div>
+            <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/doi.png" class="body-logo"><div class="body-info"><div class="body-title">DOI (Department of Industry)</div><div class="body-role">Trade & industry coordination</div></div></div>
+            <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/WBT.png" class="body-logo"><div class="body-info"><div class="body-title">WBT (World Best Trading)</div><div class="body-role">Commercial & logistics</div></div></div>
+            <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/QS.png" class="body-logo"><div class="body-info"><div class="body-title">Quality Solutions</div><div class="body-role">HACCP, traceability, audit</div></div></div>
+            <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/Tourism.png" class="body-logo"><div class="body-info"><div class="body-title">Tourism</div><div class="body-role">Brand & destination alignment</div></div></div>
+            <div class="body-card"><img src="https://github.com/Man-Blaze/vbs-report/raw/main/images/DARD.png" class="body-logo"><div class="body-info"><div class="body-title">DARD (Department of Agriculture)</div><div class="body-role">Farm extension & standards</div></div></div>
+            <div class="body-card"><div class="body-info"><div class="body-title">Market Place Fresh</div><div class="body-role">Packhouse operations & cold chain</div></div></div>
+        </div>
+        <img class="cover-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/packhouse%20workers%20in%20santo.jpg" alt="Packhouse workers">
+        <div class="footer-note">Together, we delivered.</div>
+    </section>
+
+    <!-- PAGE 4: DYNAMIC TARO -->
+    <section class="page" id="taro">
+        <div class="brand">VANU · TASTE OF VANUATU</div>
+        <div class="two-column">
+            <div>
+                <h2 style="border-left: none; padding-left: 0;">Fresh Taro <span class="live-badge">LIVE</span></h2>
+                <div id="taroStock" class="live-stock">Loading stock...</div>
+                <p class="scientific"><em>Colocasia esculenta var. esculenta</em></p>
+                <table class="spec-table">
+                    <tr><td>Product Description</td><td>White flesh, firm texture</td></tr>
+                    <tr><td>Type</td><td>Fresh</td></tr>
+                    <tr><td>Packed By</td><td>Santo Packhouse</td></tr>
+                    <tr><td>Packer's Address</td><td>Red Corner Area, Luganville, Espiritu Santo, Vanuatu</td></tr>
+                    <tr><td>Exporter</td><td>WBT Vanuatu Ltd</td></tr>
+                    <tr><td>Exporter Address</td><td>Z1 Building, Rue de Bougainville, George Pompidou, PO Box 6532, Port Vila, Vanuatu</td></tr>
+                    <tr><td>Importer (Australia)</td><td>World Best Trading Australia Pty Ltd, 25 Kirkham Rd, Keysborough VIC 3173</td></tr>
+                    <tr><td>Phone</td><td>+613 9401 3948</td></tr>
+                    <tr><td>Lot Code</td><td>Updated Automatically by Packhouse</td></tr>
+                    <tr><td>Net Weight</td><td>Varies by Batch</td></tr>
+                    <tr><td>Storage</td><td>Cool dry place · 10°C</td></tr>
+                    <tr><td>Available Stock</td><td id="taroSource">Fetching Data...</td></tr>
+                </table>
+                <button class="order-btn" onclick="openOrderModal('Taro', 560)">🛒 Order Fresh Taro Now</button>
+            </div>
+            <div>
+                <img class="product-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/freshtaro.jpg" alt="Fresh Taro">
+                <img class="product-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/taro%20table%20cleaner.jpg" alt="Taro packing">
+            </div>
+        </div>
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+    <!-- PAGE 5: DYNAMIC YAM -->
+    <section class="page" id="yam">
+        <div class="brand">VANU · TASTE OF VANUATU</div>
+        <div class="two-column">
+            <div>
+                <h2 style="border-left: none; padding-left: 0;">Fresh Yam <span class="live-badge">LIVE</span></h2>
+                <div id="yamStock" class="live-stock">Loading stock...</div>
+                <p class="scientific"><em>Dioscorea alata</em></p>
+                <table class="spec-table">
+                    <tr><td>Product Description</td><td>Purple or white flesh, firm texture</td></tr>
+                    <tr><td>Type</td><td>Fresh</td></tr>
+                    <tr><td>Packed By</td><td>Santo Packhouse</td></tr>
+                    <tr><td>Packer's Address</td><td>Red Corner Area, Luganville, Espiritu Santo, Vanuatu</td></tr>
+                    <tr><td>Exporter</td><td>WBT Vanuatu Ltd</td></tr>
+                    <tr><td>Exporter Address</td><td>Z1 Building, Port Vila, Vanuatu</td></tr>
+                    <tr><td>Importer</td><td>World Best Trading Australia Pty Ltd</td></tr>
+                    <tr><td>Lot Code</td><td>Updated Automatically by Packhouse</td></tr>
+                    <tr><td>Net Weight</td><td>Varies by Batch</td></tr>
+                    <tr><td>Storage</td><td>Cool dry place · 14–16°C</td></tr>
+                    <tr><td>Available Stock</td><td id="yamSource">Fetching Data...</td></tr>
+                </table>
+                <button class="order-btn" onclick="openOrderModal('Yam', 460)">🛒 Order Fresh Yam Now</button>
+            </div>
+            <div>
+                <img class="product-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/yams%20white.jpg" alt="Fresh Yam">
+            </div>
+        </div>
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+    <!-- PAGE 6: DYNAMIC KUMALA -->
+    <section class="page" id="kumala">
+        <div class="brand">VANU · TASTE OF VANUATU</div>
+        <div class="two-column">
+            <div>
+                <h2 style="border-left: none; padding-left: 0;">Fresh Kumala / Sweet Potato <span class="live-badge">LIVE</span></h2>
+                <div id="kumalaStock" class="live-stock">Loading stock...</div>
+                <p class="scientific"><em>Ipomoea batatas</em></p>
+                <table class="spec-table">
+                    <tr><td>Product Description</td><td>Orange, yellow, or purple flesh – naturally sweet</td></tr>
+                    <tr><td>Type</td><td>Fresh</td></tr>
+                    <tr><td>Packed By</td><td>Santo Packhouse</td></tr>
+                    <tr><td>Packer's Address</td><td>Red Corner Area, Luganville, Espiritu Santo, Vanuatu</td></tr>
+                    <tr><td>Exporter</td><td>WBT Vanuatu Ltd</td></tr>
+                    <tr><td>Exporter Address</td><td>Z1 Building, Port Vila, Vanuatu</td></tr>
+                    <tr><td>Importer</td><td>World Best Trading Australia Pty Ltd</td></tr>
+                    <tr><td>Lot Code</td><td>Updated Automatically by Packhouse</td></tr>
+                    <tr><td>Net Weight</td><td>Varies by Batch</td></tr>
+                    <tr><td>Storage</td><td>Cool dry place · 13–15°C</td></tr>
+                    <tr><td>Available Stock</td><td id="kumalaSource">Fetching Data...</td></tr>
+                </table>
+                <button class="order-btn" onclick="openOrderModal('Kumala', 400)">🛒 Order Fresh Kumala Now</button>
+            </div>
+            <div>
+                <img class="product-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/Kumala-Food-Dine-Pacific-Island-Living-01.jpg" alt="Fresh Kumala">
+            </div>
+        </div>
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+    <!-- PAGE 7: DYNAMIC GINGER -->
+    <section class="page" id="ginger">
+        <div class="brand">VANU · TASTE OF VANUATU</div>
+        <div class="two-column">
+            <div>
+                <h2 style="border-left: none; padding-left: 0;">Fresh Ginger <span class="live-badge">LIVE</span></h2>
+                <div id="gingerStock" class="live-stock">Loading stock...</div>
+                <p class="scientific"><em>Zingiber officinale</em></p>
+                <table class="spec-table">
+                    <tr><td>Product Description</td><td>Young ginger – mild, juicy, low fiber</td></tr>
+                    <tr><td>Type</td><td>Fresh</td></tr>
+                    <tr><td>Packed By</td><td>Santo Packhouse</td></tr>
+                    <tr><td>Packer's Address</td><td>Red Corner Area, Luganville, Espiritu Santo, Vanuatu</td></tr>
+                    <tr><td>Exporter</td><td>WBT Vanuatu Ltd</td></tr>
+                    <tr><td>Exporter Address</td><td>Z1 Building, Port Vila, Vanuatu</td></tr>
+                    <tr><td>Importer</td><td>World Best Trading Australia Pty Ltd</td></tr>
+                    <tr><td>Lot Code</td><td>Updated Automatically by Packhouse</td></tr>
+                    <tr><td>Net Weight</td><td>Varies by Batch</td></tr>
+                    <tr><td>Storage</td><td>Cool dry place · 13°C</td></tr>
+                    <tr><td>Available Stock</td><td id="gingerSource">Fetching Data...</td></tr>
+                </table>
+                <button class="order-btn" onclick="openOrderModal('Ginger', 620)">🛒 Order Fresh Ginger Now</button>
+            </div>
+            <div>
+                <img class="product-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/fresh_ginger.png" alt="Fresh Ginger">
+            </div>
+        </div>
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+    <!-- PAGE 8: DYNAMIC DRIED COCONUT -->
+    <section class="page" id="coconut">
+        <div class="brand">VANU · TASTE OF VANUATU</div>
+        <div class="two-column">
+            <div>
+                <h2 style="border-left: none; padding-left: 0;">Dried Coconut <span class="live-badge">LIVE</span></h2>
+                <div id="coconutStock" class="live-stock">Loading stock...</div>
+                <p class="scientific"><em>Cocos nucifera</em></p>
+                <table class="spec-table">
+                    <tr><td>Product Description</td><td>Desiccated, sun-dried, or shredded – no sulfites</td></tr>
+                    <tr><td>Type</td><td>Dried</td></tr>
+                    <tr><td>Packed By</td><td>Santo Packhouse</td></tr>
+                    <tr><td>Packer's Address</td><td>Red Corner Area, Luganville, Espiritu Santo, Vanuatu</td></tr>
+                    <tr><td>Exporter</td><td>WBT Vanuatu Ltd</td></tr>
+                    <tr><td>Exporter Address</td><td>Z1 Building, Port Vila, Vanuatu</td></tr>
+                    <tr><td>Importer</td><td>World Best Trading Australia Pty Ltd</td></tr>
+                    <tr><td>Lot Code</td><td>Updated Automatically by Packhouse</td></tr>
+                    <tr><td>Net Weight</td><td>Varies by Batch</td></tr>
+                    <tr><td>Storage</td><td>Cool dry place · Below 25°C, humidity <60%</td></tr>
+                    <tr><td>Available Stock</td><td id="coconutSource">Fetching Data...</td></tr>
+                </table>
+                <button class="order-btn" onclick="openOrderModal('Coconut', 330)">🛒 Order Dried Coconut Now</button>
+            </div>
+            <div>
+                <img class="product-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/coconut%20(1).PNG" alt="Dried Coconut">
+            </div>
+        </div>
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+    <!-- PAGE 9: BACK COVER / CONTACT -->
+    <section class="page" id="contact">
+        <div class="brand">VANU · TASTE OF VANUATU</div>
+        <h2>Contact Us</h2>
+        <div class="two-column">
+            <div>
+                <p><strong>Exporter</strong><br>
+                WBT Vanuatu Ltd<br>
+                Z1 Building, Rue de Bougainville, George Pompidou<br>
+                PO Box 6532, Port Vila, Vanuatu</p>
+                <p><strong>Importer (Australia)</strong><br>
+                World Best Trading Australia Pty Ltd<br>
+                25 Kirkham Rd, Keysborough, VIC 3173 Australia<br>
+                Phone: +613 9401 3948</p>
+                <p><strong>Packhouse Operations</strong><br>
+                Market Place Fresh / Santo Packhouse<br>
+                Red Corner Area, Luganville, Espiritu Santo, Vanuatu</p>
+            </div>
+            <div>
+                <p><strong>Certifications</strong></p>
+                <ul style="margin-left: 20px; color: #4a6741;">
+                    <li>✓ Santo National Standard Packhouse System</li>
+                    <li>✓ HACCP-aligned (Quality Solutions audit)</li>
+                    <li>✓ Lab tested – Negative for Salmonella, E. coli</li>
+                    <li>✓ Traceable – Batch code + harvest date</li>
+                    <li>✓ Organic farming practices – No chemicals</li>
+                </ul>
+            </div>
+        </div>
+        <img class="cover-image" src="https://github.com/Man-Blaze/vbs-report/raw/main/images/santo%20first%20container.jpg" alt="Santo first container shipment">
+        <p style="text-align: center; margin-top: 32px; font-size: 1.1rem;"><strong>From Vanuatu Organic farms to the world — your healthy choice, our national pride.</strong></p>
+        <div class="footer-note">PRODUCE OF VANUATU</div>
+    </section>
+
+</div>
+
+<!-- ========================================================== -->
+<!-- ORDER MODAL -->
+<!-- ========================================================== -->
+<div id="orderModal">
+    <div class="modal-box">
+        <h2>📦 Place Your Order</h2>
+        <div id="orderMessage" class="modal-msg"></div>
+        <form id="orderForm">
+            <input type="hidden" id="orderCrop">
+            <input type="hidden" id="orderPricePerKg">
+            <input type="text" id="custName" placeholder="Full Name *" required>
+            <input type="email" id="custEmail" placeholder="Email Address *" required>
+            <input type="tel" id="custPhone" placeholder="Phone Number *" required>
+            <input type="number" id="orderQty" placeholder="Quantity (kg) *" min="1" required>
+            <p id="orderTotalPrice" style="font-weight:bold; margin-bottom:15px;">Total: VT 0</p>
+            <button type="submit" class="btn-order-submit">✅ Place Order (Pay on Delivery)</button>
+            <button type="button" class="btn-order-close" onclick="closeOrderModal()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// =============================================================
+// SUPABASE CONFIG
+// =============================================================
+const SUPABASE_URL = 'https://pdwctzueksfuspwwumdy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkd2N0enVla3NmdXNwd3d1bWR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MTA3NDQsImV4cCI6MjA5MjM4Njc0NH0.Xi7MH3MLuxDx1FK6BKLJi-n47SQn-gPgWxq35NuRpZY';
+const vbsClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// =============================================================
+// CATALOGUE DATA LOADING
+// =============================================================
+async function loadCatalogueStock() {
+    const { data: batches, error } = await vbsClient.from('traceability_batches').select('*');
+    if (error) {
+        console.error("Error loading stock:", error);
+        document.querySelectorAll('.live-stock').forEach(el => el.innerText = "❌ Error loading data");
+        return;
+    }
+
+    let stock = { taro: 0, yam: 0, kumala: 0, ginger: 0, coconut: 0 };
+    let sources = { taro: new Set(), yam: new Set(), kumala: new Set(), ginger: new Set(), coconut: new Set() };
+
+    for (let b of batches) {
+        if (b.status === 'Ready' || b.status === 'Dispatched') {
+            const lowerCrop = b.crop.toLowerCase();
+            const qty = parseFloat(b.quantity_kg || 0);
+            if (lowerCrop.includes('taro')) { stock.taro += qty; if (b.province) sources.taro.add(b.province); }
+            else if (lowerCrop.includes('yam')) { stock.yam += qty; if (b.province) sources.yam.add(b.province); }
+            else if (lowerCrop.includes('kumala') || lowerCrop.includes('sweet potato')) { stock.kumala += qty; if (b.province) sources.kumala.add(b.province); }
+            else if (lowerCrop.includes('ginger')) { stock.ginger += qty; if (b.province) sources.ginger.add(b.province); }
+            else if (lowerCrop.includes('coconut')) { stock.coconut += qty; if (b.province) sources.coconut.add(b.province); }
+        }
+    }
+
+    document.getElementById('taroStock').innerHTML = `📦 ${stock.taro.toLocaleString()} kg Available`;
+    document.getElementById('taroSource').innerHTML = `Source: ${[...sources.taro].join(', ') || 'None'}`;
+    document.getElementById('yamStock').innerHTML = `📦 ${stock.yam.toLocaleString()} kg Available`;
+    document.getElementById('yamSource').innerHTML = `Source: ${[...sources.yam].join(', ') || 'None'}`;
+    document.getElementById('kumalaStock').innerHTML = `📦 ${stock.kumala.toLocaleString()} kg Available`;
+    document.getElementById('kumalaSource').innerHTML = `Source: ${[...sources.kumala].join(', ') || 'None'}`;
+    document.getElementById('gingerStock').innerHTML = `📦 ${stock.ginger.toLocaleString()} kg Available`;
+    document.getElementById('gingerSource').innerHTML = `Source: ${[...sources.ginger].join(', ') || 'None'}`;
+    document.getElementById('coconutStock').innerHTML = `📦 ${stock.coconut.toLocaleString()} kg Available`;
+    document.getElementById('coconutSource').innerHTML = `Source: ${[...sources.coconut].join(', ') || 'None'}`;
+}
+
+// =============================================================
+// ORDER MODAL LOGIC
+// =============================================================
+function openOrderModal(crop, pricePerKg) {
+    document.getElementById('orderCrop').value = crop;
+    document.getElementById('orderPricePerKg').value = pricePerKg;
+    document.getElementById('orderQty').value = '';
+    document.getElementById('custName').value = '';
+    document.getElementById('custEmail').value = '';
+    document.getElementById('custPhone').value = '';
+    document.getElementById('orderMessage').className = 'modal-msg';
+    document.getElementById('orderMessage').innerText = '';
+    document.getElementById('orderTotalPrice').innerText = `Total: VT 0`;
+    document.getElementById('orderModal').classList.add('active');
+}
+
+function closeOrderModal() {
+    document.getElementById('orderModal').classList.remove('active');
+}
+
+// Calculate total price in real-time
+document.getElementById('orderQty').addEventListener('input', function() {
+    const price = parseFloat(document.getElementById('orderPricePerKg').value);
+    const qty = parseFloat(this.value);
+    if (!isNaN(price) && !isNaN(qty) && qty > 0) {
+        document.getElementById('orderTotalPrice').innerText = `Total: VT ${(price * qty).toLocaleString()}`;
+    } else {
+        document.getElementById('orderTotalPrice').innerText = `Total: VT 0`;
+    }
+});
+
+// Handle Order Submission
+document.getElementById('orderForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const crop = document.getElementById('orderCrop').value;
+    const price = parseFloat(document.getElementById('orderPricePerKg').value);
+    const qty = parseFloat(document.getElementById('orderQty').value);
+    const name = document.getElementById('custName').value.trim();
+    const email = document.getElementById('custEmail').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const msgBox = document.getElementById('orderMessage');
+
+    if(qty <= 0) {
+        msgBox.className = 'modal-msg error';
+        msgBox.innerText = 'Please enter a valid quantity.';
+        return;
+    }
+
+    // 1. CHECK LIVE STOCK
+    const { data: batches, error: fetchErr } = await vbsClient.from('traceability_batches').select('*');
+    if(fetchErr) {
+        msgBox.className = 'modal-msg error';
+        msgBox.innerText = 'System error checking stock. Please try again.';
+        return;
+    }
+
+    let availableQty = 0;
+    for (let b of batches) {
+        if ((b.status === 'Ready' || b.status === 'Dispatched') && b.crop.toLowerCase().includes(crop.toLowerCase())) {
+            availableQty += parseFloat(b.quantity_kg || 0);
+        }
+    }
+
+    if(qty > availableQty) {
+        msgBox.className = 'modal-msg error';
+        msgBox.innerText = `❌ Not enough stock! Only ${availableQty.toLocaleString()} kg available.`;
+        return;
+    }
+
+    // 2. DEDUCT FROM DATABASE (Reserve the stock)
+    // We'll loop through batches and deduct until the ordered amount is met
+    let toDeduct = qty;
+    for (let b of batches) {
+        if (toDeduct <= 0) break;
+        if ((b.status === 'Ready' || b.status === 'Dispatched') && b.crop.toLowerCase().includes(crop.toLowerCase())) {
+            let currentQty = parseFloat(b.quantity_kg || 0);
+            let deduction = Math.min(toDeduct, currentQty);
+            let newQty = currentQty - deduction;
+            toDeduct -= deduction;
+            
+            // Update the batch in database
+            await vbsClient.from('traceability_batches').update({ quantity_kg: newQty }).eq('id', b.id);
+        }
+    }
+
+    // 3. SAVE THE ORDER
+    const totalPrice = price * qty;
+    const { error: insertError } = await vbsClient.from('market_orders').insert({
+        customer_name: name,
+        customer_email: email,
+        customer_phone: phone,
+        crop: crop,
+        grade: 'A', // Defaulting to Grade A for the online store
+        quantity_kg: qty,
+        total_price_vt: totalPrice,
+        status: 'Pending Payment'
+    });
+
+    if(insertError) {
+        // If order saving fails, we MUST restore the stock we just removed!
+        for (let b of batches) {
+            if (b.crop.toLowerCase().includes(crop.toLowerCase())) {
+                let restoredQty = parseFloat(b.quantity_kg || 0) + qty;
+                await vbsClient.from('traceability_batches').update({ quantity_kg: restoredQty }).eq('id', b.id);
+                break;
+            }
+        }
+        msgBox.className = 'modal-msg error';
+        msgBox.innerText = 'Failed to place the order. Stock has been restored.';
+    } else {
+        msgBox.className = 'modal-msg success';
+        msgBox.innerText = `✅ Order Placed! ${qty}kg reserved. Please wait for invoice.`;
+        document.getElementById('orderQty').value = '';
+        // Reload the stock numbers on the page
+        loadCatalogueStock();
+        setTimeout(closeOrderModal, 3000);
+    }
+};
+
+// =============================================================
+// INIT
+// =============================================================
+document.addEventListener('DOMContentLoaded', loadCatalogueStock);
+</script>
+</body>
+</html>
+```
