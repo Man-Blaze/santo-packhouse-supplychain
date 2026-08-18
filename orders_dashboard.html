@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packhouse · Orders Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1a12; color: #e0e6ed; padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* --- Header --- */
+        .header {
+            background: linear-gradient(145deg, #162c25, #0d1814);
+            border: 1px solid #1b362e; border-radius: 12px; padding: 20px 25px; margin-bottom: 25px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+        }
+        .header h1 { font-family: 'Times New Roman', Times, serif; font-size: 28px; color: #d5b07c; }
+        .header-sub { font-size: 13px; color: #8ba79e; }
+        .status-badge { background: #1a3b24; color: #a5d6a7; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; }
+
+        /* --- Stats --- */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #0d1814; border: 1px solid #1a2f27; border-radius: 8px; padding: 12px 10px; text-align: center;
+        }
+        .stat-card .value { font-size: 22px; font-weight: 700; color: #fff; }
+        .stat-card .label { font-size: 10px; color: #5e7f74; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px; }
+
+        /* --- Tables --- */
+        .table-wrap { background: #0d1814; border: 1px solid #1a2f27; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        .table-head { background: #111f19; padding: 12px 18px; border-bottom: 1px solid #1a2f27; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .table-head h2 { font-size: 18px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .table-head h2 span { color: #d5b07c; }
+        
+        .tbl-scroll { overflow-x: auto; padding: 0 4px 4px 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: #0a1410; border-bottom: 1px solid #1a2f27; }
+        thead th { padding: 10px 12px; text-align: left; color: #7a958b; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        tbody td { padding: 10px 12px; border-bottom: 1px solid #111f19; color: #c5d5ce; }
+        tbody tr:hover { background: #0d1512; }
+
+        .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; background: #1a2f27; color: #8ba79e; }
+        .tag.green { background: #1a3b24; color: #a5d6a7; }
+        .tag.orange { background: #402510; color: #ffab91; }
+        .tag.red { background: #401c1c; color: #ef9a9a; }
+        .tag.blue { background: #1c3040; color: #90caf9; }
+        .tag.grey { background: #37474f; color: #90a4ae; }
+
+        .btn-sm { border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; color: #fff; font-size: 11px; }
+        .btn-sm.update { background: #d5b07c; color: #0d1512; }
+        .btn-sm.delete { background: #b71c1c; }
+
+        @media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>📦 Orders Dashboard</h1>
+            <div class="header-sub">Vanuatu Bureau of Standards · Market Order Management</div>
+        </div>
+        <div>
+            <span class="status-badge" id="dbStatus">🔄 Connecting...</span>
+            <a href="index.html" style="color:#a1b7b0; font-size:13px; margin-left:15px;">← Back to Hub</a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card"><div class="value green" id="totalOrders">0</div><div class="label">Total Orders</div></div>
+        <div class="stat-card"><div class="value orange" id="pendingOrders">0</div><div class="label">Pending Payment</div></div>
+        <div class="stat-card"><div class="value blue" id="paidOrders">0</div><div class="label">Paid</div></div>
+        <div class="stat-card"><div class="value gold" id="totalRevenue">VT 0</div><div class="label">Total Revenue</div></div>
+    </div>
+
+    <!-- ORDERS TABLE -->
+    <div class="table-wrap">
+        <div class="table-head">
+            <h2>🛒 <span>Market Orders</span></h2>
+        </div>
+        <div class="tbl-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Email / Phone</th>
+                        <th>Crop</th>
+                        <th>Pack</th>
+                        <th>Qty (kg)</th>
+                        <th>Total (VT)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr><td colspan="9" style="text-align:center; padding:20px; color:#7a958b;">Loading orders...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// =============================================================
+// SUPABASE CONFIG
+// =============================================================
+const SUPABASE_URL = 'https://pdwctzueksfuspwwumdy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkd2N0enVla3NmdXNwd3d1bWR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MTA3NDQsImV4cCI6MjA5MjM4Njc0NH0.Xi7MH3MLuxDx1FK6BKLJi-n47SQn-gPgWxq35NuRpZY';
+const vbsClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function getStatusTag(status) {
+    const map = {
+        'Pending Payment': 'tag orange',
+        'Paid': 'tag green',
+        'Dispatched': 'tag blue',
+        'Cancelled': 'tag grey'
+    };
+    return `<span class="${map[status] || 'tag orange'}">${status}</span>`;
+}
+
+async function loadOrders() {
+    document.getElementById('dbStatus').innerHTML = '🔄 Fetching...';
+    const { data: orders, error } = await vbsClient.from('market_orders').select('*').order('created_at', { ascending: false });
+
+    if (error) {
+        console.error(error);
+        document.getElementById('dbStatus').innerHTML = '❌ Error';
+        document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="9" style="text-align:center; color:#ef5350;">Error loading orders.</td></tr>`;
+        return;
+    }
+
+    if (!orders || orders.length === 0) {
+        document.getElementById('dbStatus').innerHTML = '✅ Empty';
+        document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="9" style="text-align:center; color:#7a958b;">No orders have been placed yet.</td></tr>`;
+        document.getElementById('totalOrders').innerText = 0;
+        document.getElementById('pendingOrders').innerText = 0;
+        document.getElementById('paidOrders').innerText = 0;
+        document.getElementById('totalRevenue').innerText = 'VT 0';
+        return;
+    }
+
+    // Stats
+    let totalRev = 0;
+    let pending = 0;
+    let paid = 0;
+
+    document.getElementById('ordersTableBody').innerHTML = orders.map(o => {
+        totalRev += parseFloat(o.total_price_vt || 0);
+        if (o.status === 'Pending Payment') pending++;
+        if (o.status === 'Paid') paid++;
+
+        return `
+        <tr>
+            <td><strong>#${o.id}</strong></td>
+            <td>${o.customer_name}</td>
+            <td>${o.customer_email}<br><span style="font-size:11px; color:#7a958b;">${o.customer_phone}</span></td>
+            <td>${o.crop}</td>
+            <td>${o.pack_type || 'Fresh'}</td>
+            <td>${o.quantity_kg}</td>
+            <td style="color:#66bb6a;">VT ${parseFloat(o.total_price_vt).toLocaleString()}</td>
+            <td>${getStatusTag(o.status)}</td>
+            <td>
+                <button class="btn-sm update" onclick="updateStatus(${o.id}, 'Paid')">💰 Paid</button>
+                <button class="btn-sm update" onclick="updateStatus(${o.id}, 'Dispatched')">🚚 Dispatch</button>
+                <button class="btn-sm delete" onclick="updateStatus(${o.id}, 'Cancelled')">❌ Cancel</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('totalOrders').innerText = orders.length;
+    document.getElementById('pendingOrders').innerText = pending;
+    document.getElementById('paidOrders').innerText = paid;
+    document.getElementById('totalRevenue').innerText = 'VT ' + totalRev.toLocaleString();
+    document.getElementById('dbStatus').innerHTML = '✅ Connected';
+}
+
+async function updateStatus(id, newStatus) {
+    if (!confirm(`Change order #${id} to "${newStatus}"?`)) return;
+    const { error } = await vbsClient.from('market_orders').update({ status: newStatus }).eq('id', id);
+    if (error) alert('Error updating status: ' + error.message);
+    else loadOrders();
+}
+
+document.addEventListener('DOMContentLoaded', loadOrders);
+</script>
+</body>
+</html>
